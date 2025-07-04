@@ -1,5 +1,6 @@
 import Cocoa
 import Combine
+import SwiftUI
 
 // ClipBoardHandler 类负责管理剪贴板操作，包括监控、读取、写入剪贴板内容
 class ClipBoardHandler: ObservableObject {
@@ -105,18 +106,16 @@ class ClipBoardHandler: ObservableObject {
             content[NSPasteboard.PasteboardType("org.nspasteboard.source")] = Data(
                 NSWorkspace.shared.frontmostApplication?.bundleIdentifier?.utf8 ?? "".utf8)
         }
-        // 判断剪贴内容是否为文件
-        let isFile =
-            content[NSPasteboard.PasteboardType.fileURL] != nil
-            || content[NSPasteboard.PasteboardType.tiff] != nil
+
         // 获取字符串表示
-        var string = clipBoard.string(forType: NSPasteboard.PasteboardType.string)
-       // 如果是文件，尝试只取文件名
-        if isFile, let fileURLData = content[.fileURL],
-            let urlString = String(data: fileURLData, encoding: .utf8),
-            let url = URL(string: urlString) {
-            string = url.lastPathComponent
-        }
+        let string = clipBoard.string(forType: NSPasteboard.PasteboardType.string)
+        // 如果是文件，尝试取文件名
+        // if string == nil && content[NSPasteboard.PasteboardType.fileURL] != nil, let fileURLData = content[NSPasteboard.PasteboardType.fileURL],
+        //     let urlString = String(data: fileURLData, encoding: .utf8),
+        //     let url = URL(string: urlString) {
+        //     string = url.lastPathComponent
+        // }
+        
         // 如果是文件但没有图标，等待图标数据（最多1秒）
         if content[NSPasteboard.PasteboardType.fileURL] != nil
             && content[NSPasteboard.PasteboardType("com.apple.icns")] == nil
@@ -130,9 +129,11 @@ class ClipBoardHandler: ObservableObject {
                 i += 1
             }
         }
-        // 获取图标数据
-        content[NSPasteboard.PasteboardType("com.apple.icns")] = clipBoard.data(
-            forType: NSPasteboard.PasteboardType("com.apple.icns"))
+        content[NSPasteboard.PasteboardType("com.apple.icns")] = clipBoard.data(forType: NSPasteboard.PasteboardType("com.apple.icns"))
+        if content[NSPasteboard.PasteboardType("com.apple.icns")] == nil && content[NSPasteboard.PasteboardType.tiff] != nil {
+            content[NSPasteboard.PasteboardType("com.apple.icns")] = content[NSPasteboard.PasteboardType.tiff]
+        }
+        
         // 压缩图标数据
         if content[NSPasteboard.PasteboardType("com.apple.icns")] != nil {
             let image = NSBitmapImageRep(
@@ -144,7 +145,7 @@ class ClipBoardHandler: ObservableObject {
         }
         // 创建新的剪贴板元素并添加到历史记录的开头
         history.insert(
-            CBElement(string: string ?? "No Preview Found", isFile: isFile, content: content), at: 0
+            CBElement(string: string ?? "", content: content), at: 0
         )
         // 如果历史记录超出容量限制，删除多余项
         if history.count > historyCapacity {

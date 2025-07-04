@@ -45,12 +45,6 @@ struct ClipMenuItem: View {
     
     // 静态方法，根据剪贴板元素计算显示的图标
     private static func calcImage(clip: CBElement) -> Image? {
-        // 如果是文件但没有图标数据，则显示文档图标
-        if clip.isFile && clip.content[NSPasteboard.PasteboardType("com.apple.icns")] == nil
-            && clip.content[NSPasteboard.PasteboardType.tiff] == nil
-        {
-            return Image(systemName: "doc.fill")
-        }
         // 创建一个空的NSImage对象
         var nsImage = NSImage()
         // 尝试从TIFF数据创建图像

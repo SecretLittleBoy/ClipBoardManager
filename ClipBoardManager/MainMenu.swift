@@ -17,7 +17,6 @@ struct MainMenu: View {
             ClipMenuItem(
                 clip: CBElement(
                     string: clipBoardHandler.history[id].string,
-                    isFile: clipBoardHandler.history[id].isFile,
                     content: clipBoardHandler.history[id].content),
                 maxLength: configHandler.conf.previewLength)
         }
