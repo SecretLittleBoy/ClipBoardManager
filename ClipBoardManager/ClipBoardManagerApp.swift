@@ -9,8 +9,6 @@ struct ClipBoardManagerApp: App {
     @StateObject private var configHandler: ConfigHandler
     // 使用 @StateObject 创建并管理剪贴板处理器实例，确保其生命周期与应用程序一致
     @StateObject private var clipBoardHandler: ClipBoardHandler
-    // 用于跟踪当前选中的设置选项卡
-    @State private var curretnTab = 0
 
     // 初始化方法，创建并配置必要的对象
     init() {

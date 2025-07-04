@@ -4,6 +4,7 @@ import Combine
 // ClipBoardHandler 类负责管理剪贴板操作，包括监控、读取、写入剪贴板内容
 class ClipBoardHandler: ObservableObject {
     // 剪贴板历史记录的保存路径
+    // /Users/longyihao/Library/Containers/com.Lennard.ClipBoardManager/Data/Library/Application Support/ClipBoardManager/Clippings.json
     private let clippingsPath = URL(
         fileURLWithPath:
             "\(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].path)/ClipBoardManager/Clippings.json"
@@ -78,13 +79,13 @@ class ClipBoardHandler: ObservableObject {
     }
 
     // 读取当前剪贴板内容
-    func read() -> CBElement {
+    func read() {
         // 加锁确保线程安全
         accessLock.lock()
         // 检查剪贴板是否有变化，如果没有则返回历史记录中的第一项
         if !updateChangeCount() {
             accessLock.unlock()
-            return history.first ?? CBElement(string: "", isFile: false, content: [:])
+            return
         }
         // 存储不同类型的剪贴板内容
         var content: [NSPasteboard.PasteboardType: Data] = [:]
@@ -109,7 +110,13 @@ class ClipBoardHandler: ObservableObject {
             content[NSPasteboard.PasteboardType.fileURL] != nil
             || content[NSPasteboard.PasteboardType.tiff] != nil
         // 获取字符串表示
-        let string = clipBoard.string(forType: NSPasteboard.PasteboardType.string)
+        var string = clipBoard.string(forType: NSPasteboard.PasteboardType.string)
+       // 如果是文件，尝试只取文件名
+        if isFile, let fileURLData = content[.fileURL],
+            let urlString = String(data: fileURLData, encoding: .utf8),
+            let url = URL(string: urlString) {
+            string = url.lastPathComponent
+        }
         // 如果是文件但没有图标，等待图标数据（最多1秒）
         if content[NSPasteboard.PasteboardType.fileURL] != nil
             && content[NSPasteboard.PasteboardType("com.apple.icns")] == nil
@@ -144,7 +151,6 @@ class ClipBoardHandler: ObservableObject {
             history.removeLast(history.count - historyCapacity)
         }
         accessLock.unlock()
-        return history.first!
     }
 
     // 将指定的剪贴板元素写入系统剪贴板

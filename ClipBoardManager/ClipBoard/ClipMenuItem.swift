@@ -11,16 +11,16 @@ struct ClipMenuItem: View {
     // 处理后的预览文本
     var preview: String
     // 剪贴板内容相关的图标
-    var img: Image
+    var img: Image?
 
     // 初始化方法，创建一个剪贴板菜单项
     init(clip: CBElement, maxLength: Int) {
         self.clip = clip
         self.maxLength = maxLength
-        // 计算并设置预览文本
-        self.preview = ClipMenuItem.calcTitel(clip: clip, maxLength: maxLength)
         // 计算并设置图标
         self.img = ClipMenuItem.calcImage(clip: clip)
+        // 计算并设置预览文本，传递hasIcon参数
+        self.preview = ClipMenuItem.calcTitel(clip: clip, maxLength: maxLength, hasIcon: self.img != nil)
     }
 
     // 定义视图的主体内容
@@ -31,19 +31,20 @@ struct ClipMenuItem: View {
         }) {
             // 水平排列图标和文本
             HStack {
-                // 显示图标，调整大小为15x15
-                img
-                    .resizable()
-                    .frame(width: 15, height: 15)
+                // 只有img不为nil时才显示图标
+                if let img = img {
+                    img
+                        .resizable()
+                        .frame(width: 15, height: 15)
+                }
                 // 显示预览文本
                 Text(preview)
-
             }
         }
     }
-
+    
     // 静态方法，根据剪贴板元素计算显示的图标
-    private static func calcImage(clip: CBElement) -> Image {
+    private static func calcImage(clip: CBElement) -> Image? {
         // 如果是文件但没有图标数据，则显示文档图标
         if clip.isFile && clip.content[NSPasteboard.PasteboardType("com.apple.icns")] == nil
             && clip.content[NSPasteboard.PasteboardType.tiff] == nil
@@ -55,11 +56,13 @@ struct ClipMenuItem: View {
         // 尝试从TIFF数据创建图像
         if let image = clip.content[NSPasteboard.PasteboardType.tiff] {
             nsImage = NSImage(data: image) ?? NSImage()
-        } else {
+        } else if let icnsData = clip.content[NSPasteboard.PasteboardType("com.apple.icns")] {
             // 尝试从ICNS数据创建图像
-            nsImage =
-                NSImage(data: clip.content[NSPasteboard.PasteboardType("com.apple.icns")] ?? Data())
-                ?? NSImage()
+            nsImage = NSImage(data: icnsData) ?? NSImage()
+        }
+        // 如果nsImage没有有效内容，返回nil
+        if nsImage.representations.isEmpty {
+            return nil
         }
         // 设置图像大小为15x15
         nsImage.size = NSSize(width: 15, height: 15)
@@ -68,10 +71,14 @@ struct ClipMenuItem: View {
     }
 
     // 静态方法，根据剪贴板元素和最大长度计算预览文本
-    private static func calcTitel(clip: CBElement, maxLength: Int) -> String {
+    private static func calcTitel(clip: CBElement, maxLength: Int, hasIcon: Bool) -> String {
         // 获取剪贴板文本
         var menuTitel = clip.string
-        let maxLengthFloat = CGFloat(maxLength)
+        var maxLengthFloat = CGFloat(maxLength)
+        // 如果有图标，则最大长度减去图标宽度
+        if hasIcon {
+            maxLengthFloat -= 15
+        }
         // 移除首尾的空白字符
         menuTitel = menuTitel.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         // 将换行符替换为点号

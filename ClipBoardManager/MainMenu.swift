@@ -11,7 +11,6 @@ struct MainMenu: View {
 
     // 定义视图的主体内容
     var body: some View {
-        //TODO: 这里每次历史记录变化时都会重新创建所有 ClipMenuItem，这不是理想的方式
         // 遍历剪贴板历史记录，为每个记录创建一个菜单项
         ForEach(clipBoardHandler.history.indices, id: \.self) { id in
             // 创建剪贴板菜单项，显示历史记录中的内容
@@ -27,7 +26,7 @@ struct MainMenu: View {
         // 添加清除按钮，点击后清空剪贴板历史
         Button("Clear") {
             clipBoardHandler.clear()
-        }.keyboardShortcut("l")  // 设置键盘快捷键为 Cmd+L
+        }
         // 添加分隔线
         Divider()
         // 添加首选项按钮，点击后打开设置窗口
@@ -41,13 +40,13 @@ struct MainMenu: View {
                     title: "ClipBoardManager", rect: NSRect(x: 0, y: 0, width: 450, height: 150),
                     style: [.closable, .titled], identifier: "Settings",
                     toolbar: Toolbar(tabs: ["About", "Settings"], currentTab: $curretnTab))
-        }.keyboardShortcut(",")  // 设置键盘快捷键为 Cmd+,
+        }
         // 添加分隔线
         Divider()
         // 添加退出按钮，点击后退出应用程序
         Button("Quit") {
             NSApplication.shared.terminate(nil)
-        }.keyboardShortcut("q")  // 设置键盘快捷键为 Cmd+Q
+        }
     }
 }
 

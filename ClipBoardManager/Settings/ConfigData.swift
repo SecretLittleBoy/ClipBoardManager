@@ -39,10 +39,10 @@ final class ConfigData: Decodable, Encodable {
 
     // 默认初始化方法，设置默认值
     init() {
-        clippings = 10           // 默认保存10个剪贴板历史
-        refreshIntervall = 0.5    // 默认每0.5秒刷新一次
-        previewLength = 300       // 默认预览长度为300像素
-        atLogin = false           // 默认不在登录时启动
+        clippings = 10  // 默认保存10个剪贴板历史
+        refreshIntervall = 0.5  // 默认每0.5秒刷新一次
+        previewLength = 300  // 默认预览长度为300像素
+        atLogin = false  // 默认不在登录时启动
     }
 
     // 复制另一个ConfigData对象的初始化方法

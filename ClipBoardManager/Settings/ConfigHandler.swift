@@ -6,7 +6,7 @@ import ServiceManagement
 class ConfigHandler: ObservableObject {
 
     // 配置文件的路径，保存在应用程序支持目录下
-    // ~/Library/Containers/com.Lennard.SettingsSwitfUI/Data/Library/"Application Support"/ClipBoardManager
+    // /Users/longyihao/Library/Containers/com.Lennard.ClipBoardManager/Data/Library/Application Support/ClipBoardManager/ClipBoardManager.json
     static let CONF_FILE = URL(
         fileURLWithPath:
             "\(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].path)/ClipBoardManager/ClipBoardManager.json"
