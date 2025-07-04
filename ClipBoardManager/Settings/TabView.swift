@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct TabView: View {
-    @EnvironmentObject private var configHandler :ConfigHandler
-    @Binding var currentTab :Int
+    @EnvironmentObject private var configHandler: ConfigHandler
+    @Binding var currentTab: Int
 
     var body: some View {
         Section {
@@ -21,7 +21,7 @@ struct TabView: View {
             }
         }
         .frame(width: 450, height: 150)
-   }
+    }
 }
 
 struct TabView_Previews: PreviewProvider {

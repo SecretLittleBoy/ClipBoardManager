@@ -6,18 +6,21 @@
 //  Copyright © 2022 Lennard Kittner. All rights reserved.
 //
 
-import Foundation
 import Combine
+import Foundation
 import ServiceManagement
 
-class ConfigHandler :ObservableObject {
-    
+class ConfigHandler: ObservableObject {
+
     // ~/Library/Containers/com.Lennard.SettingsSwitfUI/Data/Library/"Application Support"/ClipBoardManager
-    static let CONF_FILE = URL(fileURLWithPath: "\(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].path)/ClipBoardManager/ClipBoardManager.json")
-    @Published var conf :ConfigData
-    private var oldConf :ConfigData! // necessary because removeDuplicates(by: ) does not work
-    private var configSink :Cancellable!
-    
+    static let CONF_FILE = URL(
+        fileURLWithPath:
+            "\(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].path)/ClipBoardManager/ClipBoardManager.json"
+    )
+    @Published var conf: ConfigData
+    private var oldConf: ConfigData!  // necessary because removeDuplicates(by: ) does not work
+    private var configSink: Cancellable!
+
     init() {
         conf = ConfigHandler.readCfg(from: ConfigHandler.CONF_FILE) ?? ConfigData()
         updateAtLogin()
@@ -30,11 +33,11 @@ class ConfigHandler :ObservableObject {
             self.oldConf = ConfigData(copy: conf)
         })
     }
-    
+
     private func updateAtLogin() {
         conf.atLogin = SMAppService.mainApp.status.rawValue == 1 ? true : false
     }
-    
+
     func applyAtLognin() {
         if conf.atLogin {
             try? SMAppService.mainApp.register()
@@ -42,7 +45,7 @@ class ConfigHandler :ObservableObject {
             try? SMAppService.mainApp.unregister()
         }
     }
-        
+
     static func readCfg(from file: URL) -> ConfigData? {
         if let data = try? Data(contentsOf: file) {
             let decoder = JSONDecoder()
@@ -53,7 +56,8 @@ class ConfigHandler :ObservableObject {
 
     static func writeCfg(_ conf: ConfigData, to file: URL) {
         if let jsonData = try? JSONEncoder().encode(conf) {
-            try? FileManager.default.createDirectory(atPath: file.deletingLastPathComponent().path, withIntermediateDirectories: true)
+            try? FileManager.default.createDirectory(
+                atPath: file.deletingLastPathComponent().path, withIntermediateDirectories: true)
             FileManager.default.createFile(atPath: file.path, contents: nil, attributes: nil)
             try? jsonData.write(to: file)
         }

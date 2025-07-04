@@ -8,21 +8,24 @@
 import SwiftUI
 
 extension View {
-    
+
     private func findWindowWithTag(identifier: String) -> NSWindow? {
         return NSApplication.shared.windows.filter({ $0.identifier?.rawValue == identifier }).first
     }
-        
-    func openNewWindowWithToolbar(title: String, rect: NSRect, style: NSWindow.StyleMask,identifier :String = "", toolbar: some View) -> NSWindow {
+
+    func openNewWindowWithToolbar(
+        title: String, rect: NSRect, style: NSWindow.StyleMask, identifier: String = "",
+        toolbar: some View
+    ) -> NSWindow {
         if !identifier.isEmpty {
             if let window = findWindowWithTag(identifier: identifier) {
                 window.orderFrontRegardless()
                 return window
             }
         }
-        
+
         let titlebarAccessoryView = toolbar.padding(.top, -5).padding(.leading, -8)
-        
+
         let accessoryHostingView = NSHostingView(rootView: titlebarAccessoryView)
         accessoryHostingView.frame.size = accessoryHostingView.fittingSize
 
@@ -38,7 +41,7 @@ extension View {
         window.title = title
         window.isReleasedWhenClosed = false
         window.identifier = NSUserInterfaceItemIdentifier(identifier)
-        
+
         window.addTitlebarAccessoryViewController(titlebarAccessory)
         window.toolbarStyle = .preference
 
@@ -51,7 +54,9 @@ extension View {
 }
 
 extension View {
-    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content)
+        -> some View
+    {
         if condition {
             transform(self)
         } else {
@@ -70,13 +75,12 @@ extension NSImage {
         let maxHeight = Float(tamanho.height)
 
         // Get ratio (landscape or portrait)
-        if (imageWidth > imageHeight) {
+        if imageWidth > imageHeight {
             // Landscape
-            ratio = maxWidth / imageWidth;
-        }
-        else {
+            ratio = maxWidth / imageWidth
+        } else {
             // Portrait
-            ratio = maxHeight / imageHeight;
+            ratio = maxHeight / imageHeight
         }
 
         // Calculate new size based on the ratio
@@ -86,12 +90,13 @@ extension NSImage {
         let imageSo = CGImageSourceCreateWithData(self.tiffRepresentation! as CFData, nil)
         let options: [NSString: NSObject] = [
             kCGImageSourceThumbnailMaxPixelSize: max(imageWidth, imageHeight) * ratio as NSObject,
-            kCGImageSourceCreateThumbnailFromImageAlways: true as NSObject
+            kCGImageSourceCreateThumbnailFromImageAlways: true as NSObject,
         ]
         let size1 = NSSize(width: Int(newWidth), height: Int(newHeight))
-        let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSo!, 0, options as CFDictionary).flatMap {
-            NSImage(cgImage: $0, size: size1)
-        }
+        let scaledImage = CGImageSourceCreateThumbnailAtIndex(imageSo!, 0, options as CFDictionary)
+            .flatMap {
+                NSImage(cgImage: $0, size: size1)
+            }
 
         return scaledImage!
     }

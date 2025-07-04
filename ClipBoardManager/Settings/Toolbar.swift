@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct Toolbar: View {
-    let tabs :[String]
-    @Binding var currentTab :Int
-    
+    let tabs: [String]
+    @Binding var currentTab: Int
+
     var body: some View {
         Picker("", selection: $currentTab) {
             ForEach(tabs.indices) { i in

@@ -34,3 +34,8 @@ There are three possibilities:
 
 ## Links
 [CPUMonitor menu bar app](https://github.com/Lennard599/CPUMonitor)
+
+
+# Formatting
+```
+find . -name "*.swift" | xargs swift-format format --configuration ./.format -i

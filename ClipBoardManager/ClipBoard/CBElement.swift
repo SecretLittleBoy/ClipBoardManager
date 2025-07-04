@@ -8,20 +8,20 @@
 
 import Cocoa
 
-class CBElement : Equatable {
+class CBElement: Equatable {
     var id: UUID
-    var string :String
-    var isFile :Bool
-    var content :[NSPasteboard.PasteboardType : Data]
-    
+    var string: String
+    var isFile: Bool
+    var content: [NSPasteboard.PasteboardType: Data]
+
     init() {
         isFile = false
         string = ""
         content = [:]
         id = UUID()
     }
-    
-    convenience init(from map: [String : String]) {
+
+    convenience init(from map: [String: String]) {
         self.init()
         string = map["string"] ?? ""
         isFile = map["isFile"] == "true"
@@ -31,16 +31,16 @@ class CBElement : Equatable {
             }
         }
     }
-    
-    init(string: String, isFile: Bool, content: [NSPasteboard.PasteboardType : Data]) {
+
+    init(string: String, isFile: Bool, content: [NSPasteboard.PasteboardType: Data]) {
         self.string = string
         self.isFile = isFile
         self.content = content
         id = UUID()
     }
-    
-    func toMap() -> [String : String] {
-        var stringDict :[String : String] = [:]
+
+    func toMap() -> [String: String] {
+        var stringDict: [String: String] = [:]
         stringDict["string"] = string
         stringDict["isFile"] = isFile ? "true" : "false"
         for (k, d) in content {
@@ -48,10 +48,8 @@ class CBElement : Equatable {
         }
         return stringDict
     }
-    
+
     static func == (lhs: CBElement, rhs: CBElement) -> Bool {
         lhs.id == rhs.id
     }
 }
-
-

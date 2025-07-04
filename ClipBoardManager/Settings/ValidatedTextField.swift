@@ -7,39 +7,29 @@
 
 import SwiftUI
 
-
-struct ValidatedTextField<T> :View {
-    @Binding var content :T
-    @Binding var error :Bool
+struct ValidatedTextField<T>: View {
+    @Binding var content: T
+    @Binding var error: Bool
     @State var valueProxy = ""
     var title = ""
-    var validate :(String) -> T?
-    
+    var validate: (String) -> T?
+
     func update(value: String) {
         if let newValue = validate(value) {
             self.content = newValue
         }
     }
-    
+
     var body: some View {
-//        let valueProxy = Binding<String>(
-//            get: { "\(self.content)" },
-//            set: {
-//              if let newValue = validate($0) {
-//                  error = false
-//                  self.content = newValue
-//              } else {
-//                  error = true
-//              }
-//            }
-//        )
-        
         return HStack {
-            TextField(title, text: $valueProxy, onEditingChanged: {focus in
-                if !focus {
-                    update(value: valueProxy)
+            TextField(
+                title, text: $valueProxy,
+                onEditingChanged: { focus in
+                    if !focus {
+                        update(value: valueProxy)
+                    }
                 }
-            })
+            )
             .onChange(of: valueProxy) { value in
                 error = validate(value) == nil
             }
@@ -53,4 +43,3 @@ struct ValidatedTextField<T> :View {
         }
     }
 }
-

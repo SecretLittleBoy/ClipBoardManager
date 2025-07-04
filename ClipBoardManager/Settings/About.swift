@@ -9,7 +9,7 @@ import SwiftUI
 
 struct About: View {
     let version: String? = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as? String
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Text("ClipBoardManager")
