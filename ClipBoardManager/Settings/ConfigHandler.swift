@@ -1,11 +1,3 @@
-//
-//  ConfigHandler.swift
-//  CPUMonitor
-//
-//  Created by Lennard on 06.08.22.
-//  Copyright © 2022 Lennard Kittner. All rights reserved.
-//
-
 import Combine
 import Foundation
 import ServiceManagement

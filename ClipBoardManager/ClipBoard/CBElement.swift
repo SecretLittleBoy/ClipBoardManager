@@ -1,11 +1,3 @@
-//
-//  CBElement.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 21.08.22.
-//  Copyright © 2022 Lennard Kittner. All rights reserved.
-//
-
 import Cocoa
 
 class CBElement: Equatable {

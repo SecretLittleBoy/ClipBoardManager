@@ -1,10 +1,3 @@
-//
-//  Settings.swift
-//  SettingsSwitfUI
-//
-//  Created by Lennard on 02.10.22.
-//
-
 import Combine
 import SwiftUI
 

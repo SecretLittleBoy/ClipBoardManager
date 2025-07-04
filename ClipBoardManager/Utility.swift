@@ -1,10 +1,3 @@
-//
-//  Utility.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 12.10.22.
-//
-
 import SwiftUI
 
 extension View {

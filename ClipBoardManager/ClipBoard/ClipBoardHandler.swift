@@ -1,11 +1,3 @@
-//
-//  ClipBoardHandler.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 19.08.22.
-//  Copyright © 2022 Lennard Kittner. All rights reserved.
-//
-
 import Cocoa
 import Combine
 

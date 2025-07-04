@@ -1,10 +1,3 @@
-//
-//  MainMenu.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 20.10.22.
-//
-
 import SwiftUI
 
 struct MainMenu: View {

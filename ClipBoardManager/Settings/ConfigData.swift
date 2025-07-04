@@ -1,10 +1,3 @@
-//
-//  ConfigData.swift
-//  SettingsSwitfUI
-//
-//  Created by Lennard on 04.10.22.
-//
-
 import Foundation
 
 func == (op1: ConfigData, op2: ConfigData) -> Bool {

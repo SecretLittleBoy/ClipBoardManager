@@ -1,10 +1,3 @@
-//
-//  ValidatedTextField.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 16.10.22.
-//
-
 import SwiftUI
 
 struct ValidatedTextField<T>: View {

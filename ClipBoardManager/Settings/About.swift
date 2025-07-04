@@ -1,10 +1,3 @@
-//
-//  About.swift
-//  SettingsSwitfUI
-//
-//  Created by Lennard on 02.10.22.
-//
-
 import SwiftUI
 
 struct About: View {

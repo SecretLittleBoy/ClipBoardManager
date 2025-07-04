@@ -1,10 +1,3 @@
-//
-//  Toolbar.swift
-//  ClipBoardManager
-//
-//  Created by Lennard on 16.10.22.
-//
-
 import SwiftUI
 
 struct Toolbar: View {
