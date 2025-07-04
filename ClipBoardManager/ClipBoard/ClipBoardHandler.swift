@@ -109,12 +109,6 @@ class ClipBoardHandler: ObservableObject {
 
         // 获取字符串表示
         let string = clipBoard.string(forType: NSPasteboard.PasteboardType.string)
-        // 如果是文件，尝试取文件名
-        // if string == nil && content[NSPasteboard.PasteboardType.fileURL] != nil, let fileURLData = content[NSPasteboard.PasteboardType.fileURL],
-        //     let urlString = String(data: fileURLData, encoding: .utf8),
-        //     let url = URL(string: urlString) {
-        //     string = url.lastPathComponent
-        // }
         
         // 如果是文件但没有图标，等待图标数据（最多1秒）
         if content[NSPasteboard.PasteboardType.fileURL] != nil
