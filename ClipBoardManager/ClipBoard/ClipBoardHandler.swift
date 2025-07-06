@@ -42,7 +42,7 @@ class ClipBoardHandler: ObservableObject {
         oldChangeCount = clipBoard.changeCount
         history = []
         accessLock = NSLock()
-        lastDivideDay = Calendar.current.startOfDay(for: Date())
+        lastDivideDay = Date()
         // 尝试从保存的文件加载历史记录
         if let clippings = try? String(contentsOfFile: clippingsPath.path) {
             loadHistoryFromJSON(JSON: clippings)
@@ -90,12 +90,18 @@ class ClipBoardHandler: ObservableObject {
             accessLock.unlock()
             return
         }
-        let today = Calendar.current.startOfDay(for: Date())
-        if lastDivideDay != today {
+        // logCount()
+        
+        let refreshTimeLength = TimeInterval(3600 * 24) // 1 hour 3600; 2 hour
+        if Date().timeIntervalSince(lastDivideDay) > refreshTimeLength {
             for i in 0..<history.count {
-                history[i].count /= 2
+                if history[i].count >= 6 {
+                    history[i].count /= 2
+                } else if history[i].count >= 4 {
+                    history[i].count = 3
+                }
             }
-            lastDivideDay = today
+            lastDivideDay = Date()
         }
         // 存储不同类型的剪贴板内容
         var content: [NSPasteboard.PasteboardType: Data] = [:]
@@ -231,6 +237,13 @@ class ClipBoardHandler: ObservableObject {
                 self.lastDivideDay = Calendar.current.startOfDay(for: loadedDate)
             }
         }
+    }
+    
+    func logCount() {
+        for i in 0..<history.count {
+            print("\(i): \(history[i].count)")
+        }
+        print("\n")
     }
 
     // 调试方法：记录剪贴板的所有内容到控制台
