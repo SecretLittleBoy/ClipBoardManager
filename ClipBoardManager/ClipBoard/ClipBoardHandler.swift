@@ -27,7 +27,7 @@ class ClipBoardHandler: ObservableObject {
     private var accessLock: NSLock
     // 剪贴板历史记录，使用 @Published 让 SwiftUI 视图能够响应变化
     @Published var history: [CBElement]!
-    var lastDivideDay: Date
+    var lastDivideTime: Date
     // 定时器，用于定期检查剪贴板变化
     private var timer: Timer!
     // 用于监听配置变化的 Combine 订阅
@@ -42,7 +42,7 @@ class ClipBoardHandler: ObservableObject {
         oldChangeCount = clipBoard.changeCount
         history = []
         accessLock = NSLock()
-        lastDivideDay = Date()
+        lastDivideTime = Date()
         // 尝试从保存的文件加载历史记录
         if let clippings = try? String(contentsOfFile: clippingsPath.path) {
             loadHistoryFromJSON(JSON: clippings)
@@ -93,7 +93,7 @@ class ClipBoardHandler: ObservableObject {
         // logCount()
         
         let refreshTimeLength = TimeInterval(3600 * 24) // 1 hour 3600; 2 hour
-        if Date().timeIntervalSince(lastDivideDay) > refreshTimeLength {
+        if Date().timeIntervalSince(lastDivideTime) > refreshTimeLength {
             for i in 0..<history.count {
                 if history[i].count >= 6 {
                     history[i].count /= 2
@@ -101,7 +101,7 @@ class ClipBoardHandler: ObservableObject {
                     history[i].count = 3
                 }
             }
-            lastDivideDay = Date()
+            lastDivideTime = Date()
         }
         // 存储不同类型的剪贴板内容
         var content: [NSPasteboard.PasteboardType: Data] = [:]
@@ -214,7 +214,7 @@ class ClipBoardHandler: ObservableObject {
     func getHistoryAsJSON() -> String {
         let data: [String: Any] = [
             "history": history.map({ (e) in e.toMap() }),
-            "lastDivideDay": lastDivideDay.timeIntervalSince1970
+            "lastDivideTime": lastDivideTime.timeIntervalSince1970
         ]
         if let jsonData = try? JSONSerialization.data(withJSONObject: data, options: .prettyPrinted) {
             return String(data: jsonData, encoding: String.Encoding.utf8) ?? ""
@@ -232,9 +232,8 @@ class ClipBoardHandler: ObservableObject {
                     self.history.append(CBElement(from: dict))
                 }
             }
-            if let timestamp = dict["lastDivideDay"] as? TimeInterval {
-                let loadedDate = Date(timeIntervalSince1970: timestamp)
-                self.lastDivideDay = Calendar.current.startOfDay(for: loadedDate)
+            if let timestamp = dict["lastDivideTime"] as? TimeInterval {
+                self.lastDivideTime = Date(timeIntervalSince1970: timestamp)
             }
         }
     }
