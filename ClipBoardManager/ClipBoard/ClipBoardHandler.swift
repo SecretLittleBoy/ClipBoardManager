@@ -27,6 +27,7 @@ class ClipBoardHandler: ObservableObject {
     private var accessLock: NSLock
     // 剪贴板历史记录，使用 @Published 让 SwiftUI 视图能够响应变化
     @Published var history: [CBElement]!
+    var lastDivideDay: Date
     // 定时器，用于定期检查剪贴板变化
     private var timer: Timer!
     // 用于监听配置变化的 Combine 订阅
@@ -41,6 +42,7 @@ class ClipBoardHandler: ObservableObject {
         oldChangeCount = clipBoard.changeCount
         history = []
         accessLock = NSLock()
+        lastDivideDay = Calendar.current.startOfDay(for: Date())
         // 尝试从保存的文件加载历史记录
         if let clippings = try? String(contentsOfFile: clippingsPath.path) {
             loadHistoryFromJSON(JSON: clippings)
@@ -87,6 +89,13 @@ class ClipBoardHandler: ObservableObject {
         if !updateChangeCount() {
             accessLock.unlock()
             return
+        }
+        let today = Calendar.current.startOfDay(for: Date())
+        if lastDivideDay != today {
+            for i in 0..<history.count {
+                history[i].count /= 2
+            }
+            lastDivideDay = today
         }
         // 存储不同类型的剪贴板内容
         var content: [NSPasteboard.PasteboardType: Data] = [:]
@@ -137,13 +146,26 @@ class ClipBoardHandler: ObservableObject {
                     ?? Data())?.representation(using: .png, properties: [:])
             content[NSPasteboard.PasteboardType("com.apple.icns")] = image
         }
-        // 创建新的剪贴板元素并添加到历史记录的开头
-        history.insert(
-            CBElement(string: string ?? "", content: content), at: 0
-        )
-        // 如果历史记录超出容量限制，删除多余项
+        // 创建新的剪贴板元素
+        let newCBElement = CBElement(count: 1, string: string ?? "", content: content)
+        var minCnt: Int64 = Int64.max
+        var minCntIdx: Int = -1
+        for i in 0..<history.count {
+            if history[i] == newCBElement {
+                history[i].count += 1
+                accessLock.unlock()
+                return
+            }
+            if history[i].count <= minCnt {
+                minCnt = history[i].count
+                minCntIdx = i
+            }
+        }
+        history.insert(newCBElement, at: 0)
+        minCntIdx += 1
+        // 如果历史记录超出容量限制，删除minCntIdx
         if history.count > historyCapacity {
-            history.removeLast(history.count - historyCapacity)
+            history.remove(at: minCntIdx)
         }
         accessLock.unlock()
     }
@@ -159,12 +181,8 @@ class ClipBoardHandler: ObservableObject {
         }
         // 更新变化计数
         oldChangeCount = clipBoard.changeCount
+        entry.count += 1
         accessLock.unlock()
-    }
-
-    // 将历史记录中指定索引的元素写入系统剪贴板
-    func write(historyIndex: Int) {
-        write(entry: history[historyIndex])
     }
 
     // 清空历史记录
@@ -188,8 +206,11 @@ class ClipBoardHandler: ObservableObject {
 
     // 将历史记录转换为JSON字符串
     func getHistoryAsJSON() -> String {
-        let hs = history.map({ (e) in e.toMap() })
-        if let jsonData = try? JSONSerialization.data(withJSONObject: hs, options: .prettyPrinted) {
+        let data: [String: Any] = [
+            "history": history.map({ (e) in e.toMap() }),
+            "lastDivideDay": lastDivideDay.timeIntervalSince1970
+        ]
+        if let jsonData = try? JSONSerialization.data(withJSONObject: data, options: .prettyPrinted) {
             return String(data: jsonData, encoding: String.Encoding.utf8) ?? ""
         }
         return ""
@@ -199,9 +220,15 @@ class ClipBoardHandler: ObservableObject {
     func loadHistoryFromJSON(JSON: String) {
         let decoded = try? JSONSerialization.jsonObject(
             with: JSON.data(using: String.Encoding.utf8) ?? Data(), options: [])
-        if let arr = decoded as? [[String: String]] {
-            for dict in arr {
-                self.history.append(CBElement(from: dict))
+        if let dict = decoded as? [String: Any] {
+            if let arr = dict["history"] as? [[String: String]] {
+                for dict in arr {
+                    self.history.append(CBElement(from: dict))
+                }
+            }
+            if let timestamp = dict["lastDivideDay"] as? TimeInterval {
+                let loadedDate = Date(timeIntervalSince1970: timestamp)
+                self.lastDivideDay = Calendar.current.startOfDay(for: loadedDate)
             }
         }
     }

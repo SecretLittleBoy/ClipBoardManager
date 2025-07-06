@@ -14,11 +14,7 @@ struct MainMenu: View {
         // 遍历剪贴板历史记录，为每个记录创建一个菜单项
         ForEach(clipBoardHandler.history.indices, id: \.self) { id in
             // 创建剪贴板菜单项，显示历史记录中的内容
-            ClipMenuItem(
-                clip: CBElement(
-                    string: clipBoardHandler.history[id].string,
-                    content: clipBoardHandler.history[id].content),
-                maxLength: configHandler.conf.previewLength)
+            ClipMenuItem(clip: clipBoardHandler.history[id], maxLength: configHandler.conf.previewLength)
         }
         // 添加分隔线
         Divider()
