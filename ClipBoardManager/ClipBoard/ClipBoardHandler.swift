@@ -99,6 +99,8 @@ class ClipBoardHandler: ObservableObject {
                     history[i].count /= 2
                 } else if history[i].count >= 4 {
                     history[i].count = 3
+                } else if history[i].count >= 2 {
+                    history[i].count -= 1;
                 }
             }
             lastDivideTime = Date()

@@ -20,11 +20,11 @@ struct About: View {
             Text("Version: \(version ?? "1.0")")
                 .font(.subheadline)
             // 显示作者信息
-            Text("Author: Lennard Kittner")
+            Text("Author: Lennard Kittner, lyh")
                 .font(.subheadline)
             // 添加一个链接按钮，点击后打开作者的GitHub页面
             Button(action: {
-                let url = URL(string: "https://github.com/LennardKittner")!
+                let url = URL(string: "https://github.com/SecretLittleBoy/ClipBoardManager")!
                 NSWorkspace.shared.open(url)
             }) {
                 Text("My GitHub")
