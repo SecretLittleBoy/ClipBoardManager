@@ -58,11 +58,11 @@ class ClipBoardHandler: ObservableObject {
         // 订阅配置变化
         configSink = configHandler.$conf.sink(receiveValue: { newConf in
             // 更新历史记录容量
+            self.accessLock.lock()
+            defer { self.accessLock.unlock() }
             self.historyCapacity = newConf.clippings
-            // 如果历史记录超出新容量，删除多余项
-            if self.history.count > self.historyCapacity {
-                self.history.removeLast(self.history.count - self.historyCapacity)
-            }
+            // 容量变化后按前半 LRU、后半计数淘汰的分区规则重新裁剪
+            self.enforceHistoryCapacity()
 
             // 如果刷新间隔有变化，更新定时器
             if self.timer?.timeInterval ?? -1 != TimeInterval(newConf.refreshIntervall)
@@ -81,6 +81,78 @@ class ClipBoardHandler: ObservableObject {
         read()
     }
 
+    // 前半部分使用 LRU，奇数容量时把多出的一个位置留给前半部分
+    private var lruCapacity: Int {
+        return max(0, (historyCapacity + 1) / 2)
+    }
+
+    // 后半部分沿用基于 count 的淘汰策略
+    private var countBasedCapacity: Int {
+        return max(0, historyCapacity - lruCapacity)
+    }
+
+    // 记录一次使用：去重、加计数、移动到 LRU 第一位，并处理分区淘汰
+    private func markAsUsed(_ entry: CBElement) {
+        guard historyCapacity > 0 else {
+            history.removeAll()
+            return
+        }
+
+        let existingIndex = history.firstIndex(where: { $0 == entry })
+        let wasInLRUSection = existingIndex != nil && existingIndex! < lruCapacity
+
+        history.removeAll { $0 == entry }
+        entry.count += 1
+        history.insert(entry, at: 0)
+
+        if !wasInLRUSection && history.count > lruCapacity {
+            let evictedFromLRU = history.remove(at: lruCapacity)
+            insertIntoCountBasedSection(evictedFromLRU)
+        }
+
+        enforceHistoryCapacity()
+    }
+
+    // 将 LRU 淘汰出来的元素放入后半区，再按当前 count 淘汰策略裁剪后半区
+    private func insertIntoCountBasedSection(_ entry: CBElement) {
+        guard countBasedCapacity > 0 else {
+            return
+        }
+
+        let insertIndex = min(lruCapacity, history.count)
+        history.insert(entry, at: insertIndex)
+        trimCountBasedSection()
+    }
+
+    // 后半区超容量时，淘汰 count 最小的元素；并列时淘汰更靠后的元素
+    private func trimCountBasedSection() {
+        let countBasedStartIndex = min(lruCapacity, history.count)
+        while history.count - countBasedStartIndex > countBasedCapacity {
+            var minCount = Int64.max
+            var minCountIndex = countBasedStartIndex
+            for i in countBasedStartIndex..<history.count {
+                if history[i].count <= minCount {
+                    minCount = history[i].count
+                    minCountIndex = i
+                }
+            }
+            history.remove(at: minCountIndex)
+        }
+    }
+
+    // 保证历史记录符合当前容量以及前后分区容量
+    private func enforceHistoryCapacity() {
+        guard historyCapacity > 0 else {
+            history.removeAll()
+            return
+        }
+
+        trimCountBasedSection()
+        while history.count > historyCapacity {
+            history.removeLast()
+        }
+    }
+
     // 读取当前剪贴板内容
     func read() {
         // 加锁确保线程安全
@@ -92,7 +164,7 @@ class ClipBoardHandler: ObservableObject {
         }
         // logCount()
         
-        let refreshTimeLength = TimeInterval(3600 * 24) // 1 hour 3600; 2 hour
+        let refreshTimeLength = TimeInterval(3600 * 24) // 1 hour 3600; 24 hour
         if Date().timeIntervalSince(lastDivideTime) > refreshTimeLength {
             for i in 0..<history.count {
                 if history[i].count >= 6 {
@@ -155,26 +227,9 @@ class ClipBoardHandler: ObservableObject {
             content[NSPasteboard.PasteboardType("com.apple.icns")] = image
         }
         // 创建新的剪贴板元素
-        let newCBElement = CBElement(count: 1, string: string ?? "", content: content)
-        var minCnt: Int64 = Int64.max
-        var minCntIdx: Int = -1
-        for i in 0..<history.count {
-            if history[i] == newCBElement {
-                history[i].count += 1
-                accessLock.unlock()
-                return
-            }
-            if history[i].count <= minCnt {
-                minCnt = history[i].count
-                minCntIdx = i
-            }
-        }
-        history.insert(newCBElement, at: 0)
-        minCntIdx += 1
-        // 如果历史记录超出容量限制，删除minCntIdx
-        if history.count > historyCapacity {
-            history.remove(at: minCntIdx)
-        }
+        let newCBElement = CBElement(count: 0, string: string ?? "", content: content)
+        let usedElement = history.first(where: { $0 == newCBElement }) ?? newCBElement
+        markAsUsed(usedElement)
         accessLock.unlock()
     }
 
@@ -189,7 +244,7 @@ class ClipBoardHandler: ObservableObject {
         }
         // 更新变化计数
         oldChangeCount = clipBoard.changeCount
-        entry.count += 1
+        markAsUsed(entry)
         accessLock.unlock()
     }
 
@@ -233,6 +288,7 @@ class ClipBoardHandler: ObservableObject {
                 for dict in arr {
                     self.history.append(CBElement(from: dict))
                 }
+                enforceHistoryCapacity()
             }
             if let timestamp = dict["lastDivideTime"] as? TimeInterval {
                 self.lastDivideTime = Date(timeIntervalSince1970: timestamp)
